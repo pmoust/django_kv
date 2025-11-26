@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-kv"
+version = "0.1.0"
+description = "A pluggable Django cache backend using py-key-value stores"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "django-kv contributors"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Framework :: Django",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+]
+
+dependencies = [
+    "Django>=5.1",
+    "py-key-value-sync>=0.3.0",
+]
+
+[project.optional-dependencies]
+redis = [
+    "py-key-value-sync[redis]>=0.3.0",
+]
+otel = [
+    "opentelemetry-sdk>=1.28.0",
+    "opentelemetry-exporter-otlp>=1.28.0",
+    "opentelemetry-instrumentation-django>=0.49b0",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-django>=4.5",
+    "black>=23.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+    "opentelemetry-sdk>=1.28.0",
+    "opentelemetry-exporter-otlp>=1.28.0",
+    "opentelemetry-instrumentation-django>=0.49b0",
+]
+
+[project.urls]
+Homepage = "https://github.com/pmoust/django_kv"
+Documentation = "https://github.com/pmoust/django_kv#readme"
+Repository = "https://github.com/pmoust/django_kv"
+Issues = "https://github.com/pmoust/django_kv/issues"
+
+[tool.setuptools]
+packages = ["django_kv", "django_kv.backends"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+

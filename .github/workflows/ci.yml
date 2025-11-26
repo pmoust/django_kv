@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: Lint (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Install only linting tools
+          pip install black flake8 mypy
+      
+      - name: Run black (format check)
+        run: |
+          black --check --diff django_kv/ tests/ examples/
+      
+      - name: Run flake8
+        run: |
+          flake8 django_kv/ tests/ examples/
+      
+      - name: Run mypy
+        run: |
+          mypy django_kv/ --ignore-missing-imports || true
+
+  test:
+    name: Test (Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}, py-key-value ${{ matrix.py-key-value-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        django-version: ["5.1", "5.2"]
+        py-key-value-version: ["0.3.0", "main"]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Clone py-key-value repository
+        run: |
+          if [ "${{ matrix.py-key-value-version }}" == "0.3.0" ]; then
+            git clone --depth 1 --branch 0.3.0 https://github.com/strawgate/py-key-value.git /tmp/py-key-value
+          else
+            git clone --depth 1 --branch main https://github.com/strawgate/py-key-value.git /tmp/py-key-value
+          fi
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          # Install py-key-value from git (0.3.0 tag or main branch)
+          # Install from cached or cloned repository
+          pip install /tmp/py-key-value/key-value/key-value-shared
+          pip install /tmp/py-key-value/key-value/key-value-sync
+          pip install /tmp/py-key-value/key-value/key-value-aio || true
+          # Install dev tools
+          pip install pytest pytest-django black flake8 mypy beartype cachetools diskcache pathvalidate
+          pip install opentelemetry-sdk opentelemetry-exporter-otlp opentelemetry-instrumentation-django
+          # Install Django with specific version
+          pip install "Django>=${{ matrix.django-version }},<5.3"
+      
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short
+      
+      - name: Check package builds
+        run: |
+          pip install build
+          python -m build --sdist --wheel
+
